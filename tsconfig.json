@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES6",
+    "target": "es2018",
     "module": "commonjs",
-    "outDir": "dist",
-    "rootDir": ".",
     "noUnusedLocals": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
