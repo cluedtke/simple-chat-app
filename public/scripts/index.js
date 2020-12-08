@@ -63,7 +63,7 @@ function updateUserList(socketIds) {
   });
 }
 
-const socket = io.connect("localhost:5000");
+const socket = io.connect();
 
 socket.on("my-socket", ({ socket }) => {
   const myUserIdContainer = document.getElementById("my-user-id");
