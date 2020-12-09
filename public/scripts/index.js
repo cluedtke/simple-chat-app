@@ -1,3 +1,9 @@
+navigator.getUserMedia =
+  navigator.getUserMedia ||
+  navigator.webkitGetUserMedia ||
+  navigator.mozGetUserMedia ||
+  navigator.msGetUserMedia;
+
 let isAlreadyCalling = false;
 let getCalled = false;
 
