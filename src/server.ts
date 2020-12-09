@@ -27,21 +27,13 @@ export class Server {
   private initialize(): void {
     this.app = express();
 
+    // setup http
     this.httpServer = createHttpServer(this.app);
     this.io = socketIO(this.httpServer);
     this.io.on("connection", this.handleSocketConnection);
 
-    const creds = this.createSslCreds();
-    this.httpsServer = createHttpsServer(creds, this.app);
-    this.ioSSL = socketIO(this.httpsServer);
-    this.ioSSL.on("connection", this.handleSocketConnection);
-
-    this.configureApp();
-    this.configureRoutes();
-  }
-
-  private createSslCreds(): { key: string; cert: string } {
-    return {
+    // setup https
+    const creds = {
       key: fs.readFileSync(
         path.join(__dirname, "../sslcert/selfsigned.key"),
         "utf8"
@@ -51,13 +43,14 @@ export class Server {
         "utf8"
       ),
     };
-  }
+    this.httpsServer = createHttpsServer(creds, this.app);
+    this.ioSSL = socketIO(this.httpsServer);
+    this.ioSSL.on("connection", this.handleSocketConnection);
 
-  private configureApp(): void {
+    // serve up html/js
     this.app.use(express.static(path.join(__dirname, "../public")));
-  }
 
-  private configureRoutes(): void {
+    // setup route(s)
     this.app.get("/", (req, res) => {
       res.sendFile("index.html");
     });
@@ -121,7 +114,7 @@ export class Server {
         socketId: socket.id,
       });
     });
-  }
+  };
 
   public listen(callback: (protocol: string, port: number) => void): void {
     this.httpServer.listen(this.HTTP_PORT, () => {
