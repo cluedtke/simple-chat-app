@@ -43,50 +43,65 @@ export class Server {
       );
 
       if (!existingSocket) {
+        console.info("NEW_SOCKET_CONNECTION", socket.id);
+
         this.activeSockets.push(socket.id);
 
-        socket.emit("my-socket", {
-          socket: socket.id,
-        });
-
-        socket.emit("update-user-list", {
+        const updateUserList = {
+          me: socket.id,
           users: this.activeSockets.filter(
             (existingSocket) => existingSocket !== socket.id
           ),
-        });
+        };
+        console.info("EMIT_UPDATE_USER_LIST", updateUserList);
+        socket.emit("update-user-list", updateUserList);
 
-        socket.broadcast.emit("update-user-list", {
-          users: [socket.id],
-        });
+        console.info("BROADCAST_UPDATE_USER_LIST", { users: [socket.id] });
+        socket.broadcast.emit("update-user-list", { users: [socket.id] });
       }
 
       socket.on("call-user", (data) => {
-        socket.to(data.to).emit("call-made", {
+        console.info("CAPTURED_CALL_USER");
+        const callMade = {
+          from: socket.id,
+          to: data.to,
           offer: data.offer,
           socket: socket.id,
-        });
+        };
+        console.info("EMIT_CALL_MADE", callMade);
+        socket.to(data.to).emit("call-made", callMade);
       });
 
       socket.on("make-answer", (data) => {
-        socket.to(data.to).emit("answer-made", {
+        console.info("CAPTURED_MAKE_ANSWER");
+        const answerMade = {
+          from: socket.id,
+          to: data.to,
           socket: socket.id,
           answer: data.answer,
-        });
+        };
+        console.info("EMIT_ANSWER_MADE", answerMade);
+        socket.to(data.to).emit("answer-made", answerMade);
       });
 
       socket.on("reject-call", (data) => {
-        socket.to(data.from).emit("call-rejected", {
+        console.info("CAPTURED_REJECT_CALL");
+        const callRejected = {
+          from: socket.id,
+          to: data.from,
           socket: socket.id,
-        });
+        };
+        console.info("EMIT_CALL_REJECTED", callRejected);
+        socket.to(data.from).emit("call-rejected", callRejected);
       });
 
       socket.on("disconnect", () => {
+        console.info("CAPTURED_DISCONNECT");
         this.activeSockets = this.activeSockets.filter(
           (existingSocket) => existingSocket !== socket.id
         );
-        socket.broadcast.emit("remove-user", {
-          socketId: socket.id,
-        });
+        console.info("BROADCAST_REMOVE_USER", { socketId: socket.id });
+        socket.broadcast.emit("remove-user", { socketId: socket.id });
       });
     });
   }

@@ -65,12 +65,11 @@ function updateUserList(socketIds) {
 
 const socket = io.connect();
 
-socket.on("my-socket", ({ socket }) => {
-  const myUserIdContainer = document.getElementById("my-user-id");
-  myUserIdContainer.innerHTML = `My User Id: ${socket}`;
-});
-
-socket.on("update-user-list", ({ users }) => {
+socket.on("update-user-list", ({ me, users }) => {
+  if (me) {
+    const myUserIdContainer = document.getElementById("my-user-id");
+    myUserIdContainer.innerHTML = `Me: "Socket: ${me}"`;
+  }
   updateUserList(users);
 });
 
