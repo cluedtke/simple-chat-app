@@ -25,11 +25,10 @@ function unselectUsersFromList() {
 
 function createUserItemContainer(socketId) {
   const userContainerEl = document.createElement("div");
-
-  const usernameEl = document.createElement("p");
-
   userContainerEl.setAttribute("class", "active-user");
   userContainerEl.setAttribute("id", socketId);
+
+  const usernameEl = document.createElement("p");
   usernameEl.setAttribute("class", "username");
   usernameEl.innerHTML = `Socket: ${socketId}`;
 
