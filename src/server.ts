@@ -1,29 +1,52 @@
 import express, { Application } from "express";
 import socketIO, { Server as SocketIOServer } from "socket.io";
-import { createServer, Server as HTTPServer } from "http";
+import { createServer as createHttpServer, Server as HTTPServer } from "http";
+import {
+  createServer as createHttpsServer,
+  Server as HTTPSServer,
+} from "https";
+import fs from "fs";
 import path from "path";
 
 export class Server {
   private httpServer: HTTPServer;
+  private httpsServer: HTTPSServer;
   private app: Application;
   private io: SocketIOServer;
 
   private activeSockets: string[] = [];
 
-  private readonly DEFAULT_PORT = 5000;
+  private readonly HTTP_PORT = 8080;
+  private readonly HTTPS_PORT = 8443;
 
   constructor() {
     this.initialize();
   }
 
   private initialize(): void {
+    const creds = this.createSslCreds();
+
     this.app = express();
-    this.httpServer = createServer(this.app);
-    this.io = socketIO(this.httpServer);
+    this.httpServer = createHttpServer(this.app);
+    this.httpsServer = createHttpsServer(creds, this.app);
+    this.io = socketIO(this.httpsServer);
 
     this.configureApp();
     this.configureRoutes();
     this.handleSocketConnection();
+  }
+
+  private createSslCreds(): { key: string; cert: string } {
+    return {
+      key: fs.readFileSync(
+        path.join(__dirname, "../sslcert/selfsigned.key"),
+        "utf8"
+      ),
+      cert: fs.readFileSync(
+        path.join(__dirname, "../sslcert/selfsigned.crt"),
+        "utf8"
+      ),
+    };
   }
 
   private configureApp(): void {
@@ -107,8 +130,11 @@ export class Server {
   }
 
   public listen(callback: (port: number) => void): void {
-    this.httpServer.listen(this.DEFAULT_PORT, () => {
-      callback(this.DEFAULT_PORT);
+    this.httpServer.listen(this.HTTP_PORT, () => {
+      callback(this.HTTP_PORT);
+    });
+    this.httpsServer.listen(this.HTTPS_PORT, () => {
+      callback(this.HTTPS_PORT);
     });
   }
 }
