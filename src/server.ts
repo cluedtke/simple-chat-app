@@ -66,75 +66,67 @@ export class Server {
       );
 
       if (!existingSocket) {
-        console.info("NEW_SOCKET_CONNECTION", socket.id);
-
         this.activeSockets.push(socket.id);
 
-        const updateUserList = {
+        socket.emit("me-registered", {
+          me: socket.id,
+        });
+
+        socket.emit("update-user-list", {
           me: socket.id,
           users: this.activeSockets.filter(
             (existingSocket) => existingSocket !== socket.id
           ),
-        };
-        console.info("EMIT_UPDATE_USER_LIST", updateUserList);
-        socket.emit("update-user-list", updateUserList);
+        });
 
-        console.info("BROADCAST_UPDATE_USER_LIST", { users: [socket.id] });
-        socket.broadcast.emit("update-user-list", { users: [socket.id] });
+        socket.broadcast.emit("update-user-list", {
+          users: [socket.id],
+        });
       }
 
       socket.on("call-user", (data) => {
-        console.info("CAPTURED_CALL_USER");
-        const callMade = {
+        socket.to(data.to).emit("call-made", {
           from: socket.id,
           to: data.to,
           offer: data.offer,
           socket: socket.id,
-        };
-        console.info("EMIT_CALL_MADE", callMade);
-        socket.to(data.to).emit("call-made", callMade);
+        });
       });
 
       socket.on("make-answer", (data) => {
-        console.info("CAPTURED_MAKE_ANSWER");
-        const answerMade = {
+        socket.to(data.to).emit("answer-made", {
           from: socket.id,
           to: data.to,
           socket: socket.id,
           answer: data.answer,
-        };
-        console.info("EMIT_ANSWER_MADE", answerMade);
-        socket.to(data.to).emit("answer-made", answerMade);
+        });
       });
 
       socket.on("reject-call", (data) => {
-        console.info("CAPTURED_REJECT_CALL");
-        const callRejected = {
+        socket.to(data.from).emit("call-rejected", {
           from: socket.id,
           to: data.from,
           socket: socket.id,
-        };
-        console.info("EMIT_CALL_REJECTED", callRejected);
-        socket.to(data.from).emit("call-rejected", callRejected);
+        });
       });
 
       socket.on("disconnect", () => {
-        console.info("CAPTURED_DISCONNECT");
         this.activeSockets = this.activeSockets.filter(
           (existingSocket) => existingSocket !== socket.id
         );
-        console.info("BROADCAST_REMOVE_USER", { socketId: socket.id });
-        socket.broadcast.emit("remove-user", { socketId: socket.id });
+        socket.broadcast.emit("remove-user", {
+          socketId: socket.id,
+        });
       });
     });
   }
 
-  public listen(callback: (port: number) => void): void {
+  public listen(callback: (protocol: string, port: number) => void): void {
     this.httpServer.listen(this.HTTP_PORT, () => {
-      callback(this.HTTP_PORT);
+      callback("http", this.HTTP_PORT);
     });
     this.httpsServer.listen(this.HTTPS_PORT, () => {
-      callback(this.HTTPS_PORT);
+      callback("https", this.HTTPS_PORT);
     });
   }
 }

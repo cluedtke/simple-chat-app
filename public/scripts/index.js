@@ -56,10 +56,17 @@ async function callUser(socketId) {
   });
 }
 
-function updateUserList(socketIds) {
+const socket = io.connect();
+
+socket.on("me-registered", ({ me }) => {
+  const myUserIdContainer = document.getElementById("my-user-id");
+  myUserIdContainer.innerHTML = `Me: "Socket: ${me}"`;
+})
+
+socket.on("update-user-list", ({ users }) => {
   const activeUserContainer = document.getElementById("active-user-container");
 
-  socketIds.forEach((socketId) => {
+  users.forEach((socketId) => {
     const alreadyExistingUser = document.getElementById(socketId);
     if (!alreadyExistingUser) {
       const userContainerEl = createUserItemContainer(socketId);
@@ -67,16 +74,6 @@ function updateUserList(socketIds) {
       activeUserContainer.appendChild(userContainerEl);
     }
   });
-}
-
-const socket = io.connect();
-
-socket.on("update-user-list", ({ me, users }) => {
-  if (me) {
-    const myUserIdContainer = document.getElementById("my-user-id");
-    myUserIdContainer.innerHTML = `Me: "Socket: ${me}"`;
-  }
-  updateUserList(users);
 });
 
 socket.on("remove-user", ({ socketId }) => {
